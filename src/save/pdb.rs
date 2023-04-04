@@ -10,6 +10,10 @@ use std::io::prelude::*;
 use std::io::BufWriter;
 use std::iter;
 
+/// for saving a gizpped file.
+use flate2::write::GzEncoder;
+use flate2::Compression;
+
 /// Save the given PDB struct to the given file, validating it beforehand.
 ///
 /// # Errors
@@ -49,6 +53,49 @@ pub fn save_pdb(
     save_pdb_raw(pdb, BufWriter::new(file), level);
     Ok(())
 }
+
+/// Save the given PDB struct to the given gzipped file, validating it beforehand.
+///
+/// # Errors
+/// It fails if the validation fails with the given `level`.
+/// If validation gives rise to problems, use the `save_raw` function.
+///
+/// # Known Problems
+/// Saving SEQRES lines is experimental, as there are many nitpicky things to consider
+/// when generating SEQRES records, which are not all implemented (yet).
+pub fn save_pdb_gz(
+    pdb: &PDB,
+    filename: impl AsRef<str>,
+    level: StrictnessLevel,
+) -> Result<(), Vec<PDBError>> {
+    let filename = filename.as_ref();
+    let mut errors = validate(pdb);
+    errors.extend(validate_pdb(pdb));
+    for error in &errors {
+        if error.fails(level) {
+            return Err(errors);
+        }
+    }
+
+    let file = match File::create(filename) {
+        Ok(f) => f,
+        Err(e) => {
+            errors.push(PDBError::new(
+                ErrorLevel::BreakingError,
+                "Could not open file",
+                format!("Could not open the file for writing, make sure you have permission for this file and no other program is currently using it.\n{e}"),
+                Context::show(filename)
+            ));
+            return Err(errors);
+        }
+    };
+
+	let writer = BufWriter::new(GzEncoder::new(file, Compression::default()));
+
+    save_pdb_raw(pdb, writer, level);
+    Ok(())
+}
+
 
 /// Save the given PDB struct to the given BufWriter.
 /// It does not validate or renumber the PDB, so if that is needed, that needs to be done in preparation.

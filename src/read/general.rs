@@ -20,6 +20,8 @@ pub fn open(
 ) -> Result<(PDB, Vec<PDBError>), Vec<PDBError>> {
     if check_extension(&filename, "pdb") {
         open_pdb(filename, level)
+	} else if check_extension2(&filename, "pdb.gz") {
+        open_pdb_gz(filename, level)
     } else if check_extension(&filename, "cif") {
         open_mmcif(filename, level)
     } else {

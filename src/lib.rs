@@ -159,3 +159,7 @@ fn check_extension(filename: impl AsRef<str>, extension: impl AsRef<str>) -> boo
         .map(|ext| ext.eq_ignore_ascii_case(extension.as_ref()))
         == Some(true)
 }
+/// Helper function to check extensions which consist of two elements such as .pdb.gz in filenames
+fn check_extension2(filename: impl AsRef<str>, extension: impl AsRef<str>) -> bool {
+	return filename.as_ref().ends_with(extension.as_ref());
+}

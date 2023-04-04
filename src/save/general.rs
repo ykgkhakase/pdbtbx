@@ -1,7 +1,7 @@
 use super::*;
 use crate::structs::PDB;
 use crate::StrictnessLevel;
-use crate::{check_extension, error::*};
+use crate::{check_extension, check_extension2, error::*};
 
 /// Save the given PDB struct to the given file, validating it beforehand.
 /// If validation gives rise to problems, use the `save_raw` function. The correct file
@@ -15,6 +15,8 @@ pub fn save(
 ) -> Result<(), Vec<PDBError>> {
     if check_extension(&filename, "pdb") {
         save_pdb(pdb, filename, level)
+	} else if check_extension2(&filename, "pdb.gz") {
+        save_pdb_gz(pdb, filename, level)
     } else if check_extension(&filename, "cif") {
         save_mmcif(pdb, filename, level)
     } else {

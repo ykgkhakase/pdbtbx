@@ -11,6 +11,10 @@ use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+/// loading functions open a gzipped file, 
+extern crate flate2;
+use flate2::read::GzDecoder;
+
 
 /// Parse the given file into a PDB struct.
 /// Returns a PDBError if a BreakingError is found. Otherwise it returns the PDB with all errors/warnings found while parsing it.
@@ -30,6 +34,28 @@ pub fn open_pdb(
         return Err(vec![PDBError::new(ErrorLevel::BreakingError, "Could not open file", "Could not open the specified file, make sure the path is correct, you have permission, and that it is not open in another program.", Context::show(filename))]);
     };
     let reader = BufReader::new(file);
+    open_pdb_raw(reader, Context::show(filename), level)
+}
+
+/// Parse the gzipped given file into a PDB struct.
+/// Returns a PDBError if a BreakingError is found. Otherwise it returns the PDB with all errors/warnings found while parsing it.
+///
+/// # Related
+/// If you want to open a file from memory see [`open_pdb_raw`]. There is also a function to open a mmCIF file directly
+/// see [`crate::open_mmcif`]. If you want to open a general file with no knowledge about the file type see [`crate::open`].
+pub fn open_pdb_gz(
+    filename: impl AsRef<str>,
+    level: StrictnessLevel,
+) -> Result<(PDB, Vec<PDBError>), Vec<PDBError>> {
+    let filename = filename.as_ref();
+    // Open a file a use a buffered reader to minimise memory use while immediately lexing the line followed by adding it to the current PDB
+    let file = if let Ok(f) = File::open(filename) {
+        f
+    } else {
+        return Err(vec![PDBError::new(ErrorLevel::BreakingError, "Could not open file", "Could not open the specified file, make sure the path is correct, you have permission, and that it is not open in another program.", Context::show(filename))]);
+    };
+	let decoder = GzDecoder::new(file);
+	let reader = BufReader::new(decoder);
     open_pdb_raw(reader, Context::show(filename), level)
 }
 
