@@ -7,6 +7,10 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufWriter;
 
+/// for saving a gizpped file.
+use flate2::write::GzEncoder;
+use flate2::Compression;
+
 /// Save the given PDB struct to the given file as mmCIF or PDBx.
 /// # Errors
 /// It validates the PDB. It fails if the validation fails with the given `level`, or if the file could not be opened.
@@ -38,6 +42,42 @@ pub fn save_mmcif(
     };
 
     save_mmcif_raw(pdb, BufWriter::new(file));
+    Ok(())
+}
+
+/// Save the given PDB struct to the given gzipped file as mmCIF or PDBx.
+/// # Errors
+/// It validates the PDB. It fails if the validation fails with the given `level`, or if the file could not be opened.
+/// If validation gives rise to problems, use the `save_raw` function.
+pub fn save_mmcif_gz(
+    pdb: &PDB,
+    filename: impl AsRef<str>,
+    level: StrictnessLevel,
+) -> Result<(), Vec<PDBError>> {
+    let filename = filename.as_ref();
+    let mut errors = validate(pdb);
+    for error in &errors {
+        if error.fails(level) {
+            return Err(errors);
+        }
+    }
+
+    let file = match File::create(filename) {
+        Ok(f) => f,
+        Err(_e) => {
+            errors.push(PDBError::new(
+                ErrorLevel::BreakingError,
+                "Could not open file",
+                "Could not open the file for writing, make sure you have permission for this file and no other program is currently using it.",
+                Context::show(filename)
+            ));
+            return Err(errors);
+        }
+    };
+
+	let writer = BufWriter::new(GzEncoder::new(file, Compression::default()));
+
+    save_mmcif_raw(pdb, writer);
     Ok(())
 }
 

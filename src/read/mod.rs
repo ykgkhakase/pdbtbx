@@ -7,5 +7,5 @@ mod pdb;
 use super::{check_extension, check_extension2};
 
 pub use general::{open, open_raw};
-pub use mmcif::{open_mmcif, open_mmcif_raw};
+pub use mmcif::{open_mmcif, open_mmcif_gz, open_mmcif_raw};
 pub use pdb::{open_pdb, open_pdb_gz, open_pdb_raw};

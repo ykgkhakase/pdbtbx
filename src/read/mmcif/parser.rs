@@ -7,6 +7,10 @@ use crate::TransformationMatrix;
 use std::fs::File;
 use std::io::prelude::*;
 
+/// loading functions open a gzipped file, 
+extern crate flate2;
+use flate2::read::GzDecoder;
+
 /// Parse the given mmCIF file into a PDB struct.
 /// Returns a PDBError if a BreakingError is found. Otherwise it returns the PDB with all errors/warnings found while parsing it.
 ///
@@ -25,6 +29,35 @@ pub fn open_mmcif(
     };
     let mut contents = String::new();
     if let Err(e) = file.read_to_string(&mut contents) {
+        return Err(vec![PDBError::new(
+            ErrorLevel::BreakingError,
+            "Error while reading file",
+            format!("Error: {e}"),
+            Context::show(filename),
+        )]);
+    }
+    open_mmcif_raw(&contents, level)
+}
+
+/// Parse the given gzipped mmCIF file into a PDB struct.
+/// Returns a PDBError if a BreakingError is found. Otherwise it returns the PDB with all errors/warnings found while parsing it.
+///
+/// # Related
+/// If you want to open a file from memory see [`open_mmcif_raw`]. There is also a function to open a PDB file directly
+/// see [`crate::open_pdb`]. If you want to open a general file with no knowledge about the file type see [`crate::open`].
+pub fn open_mmcif_gz(
+    filename: impl AsRef<str>,
+    level: StrictnessLevel,
+) -> Result<(PDB, Vec<PDBError>), Vec<PDBError>> {
+    let filename = filename.as_ref();
+    let file = if let Ok(f) = File::open(filename) {
+        f
+    } else {
+        return Err(vec![PDBError::new(ErrorLevel::BreakingError, "Could not open file", "Could not open the specified file, make sure the path is correct, you have permission, and that it is not open in another program.", Context::show(filename))]);
+    };
+    let mut contents = String::new();
+	let mut decoder = GzDecoder::new(file);
+    if let Err(e) = decoder.read_to_string(&mut contents) {
         return Err(vec![PDBError::new(
             ErrorLevel::BreakingError,
             "Error while reading file",
