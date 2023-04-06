@@ -24,6 +24,8 @@ pub fn open(
         open_pdb_gz(filename, level)
     } else if check_extension(&filename, "cif") {
         open_mmcif(filename, level)
+    } else if check_extension2(&filename, "cif.gz") {
+        open_mmcif_gz(filename, level)
     } else {
         Err(vec![PDBError::new(
             ErrorLevel::BreakingError,

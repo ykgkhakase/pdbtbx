@@ -282,9 +282,17 @@ fn validate_models(pdb: &PDB) -> Vec<PDBError> {
                     ErrorLevel::StrictWarning,
                     "Atoms in Models not corresponding",
                     format!(
-                        "Atom {} in Model {} does not correspond to the respective Atom in the first model.",
+                        "Atom {} in Model {} does not correspond to the respective Atom in the first model. atom:({},{}),element:({:?},{:?}),serial:({},{}),charge({},{})",
                         current_atom.serial_number(),
-                        model.serial_number()
+                        model.serial_number(),
+						current_atom.name(),
+						standard_atom.name(),
+						current_atom.element(),
+						standard_atom.element(),
+						current_atom.serial_number(),
+						standard_atom.serial_number(),
+						current_atom.charge(),
+						standard_atom.charge()
                     ),
                     Context::None,
                 ));

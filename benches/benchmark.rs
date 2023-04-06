@@ -11,12 +11,14 @@ fn main() {
         ("medium", "example-pdbs/1yyf.pdb"),
         ("big", "example-pdbs/pTLS-6484.pdb"),
         ("huge", "example-pdbs/large.pdb"),
-        ("extreme", "example-pdbs/1htq.pdb"),
+        //("extreme", "example-pdbs/1htq.pdb"),
     ];
     let mmcif_names = vec![
         ("small", "example-pdbs/1ubq.cif"),
         ("medium", "example-pdbs/1yyf.cif"),
         ("big", "example-pdbs/pTLS-6484.cif"),
+        ("extreme", "example-pdbs/1htq.cif"),
+        ("extreme_gz", "example-pdbs/1htq.cif.gz"),
     ];
     let mut models = Vec::with_capacity(pdb_names.len());
     for (name, path) in &pdb_names {

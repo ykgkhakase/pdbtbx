@@ -55,9 +55,9 @@ pub fn open_mmcif_gz(
     } else {
         return Err(vec![PDBError::new(ErrorLevel::BreakingError, "Could not open file", "Could not open the specified file, make sure the path is correct, you have permission, and that it is not open in another program.", Context::show(filename))]);
     };
-    let mut contents = String::new();
+    let mut contents = Vec::new();
 	let mut decoder = GzDecoder::new(file);
-    if let Err(e) = decoder.read_to_string(&mut contents) {
+    if let Err(e) = decoder.read_to_end(&mut contents) {
         return Err(vec![PDBError::new(
             ErrorLevel::BreakingError,
             "Error while reading file",
@@ -65,7 +65,8 @@ pub fn open_mmcif_gz(
             Context::show(filename),
         )]);
     }
-    open_mmcif_raw(&contents, level)
+	let cow = String::from_utf8_lossy(&contents);
+    open_mmcif_raw(&cow, level)
 }
 
 /// Parse the given mmCIF `&str` into a PDB struct. This allows opening mmCIF files directly from memory.
